@@ -8,3 +8,7 @@ data/clean/fact_sales.csv
 
 # Upload workbook for Power BI; regenerate with scripts/build_workbook.py
 powerbi/retail_sales_model.xlsx
+
+# Tableau upload file; regenerate with scripts/build_tableau_file.py
+tableau/retail_sales_tableau.csv
+tableau/retail_sales_tableau_slim.csv

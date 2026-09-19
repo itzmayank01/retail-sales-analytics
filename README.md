@@ -1,20 +1,21 @@
-# Retail Sales Analytics: Python Data Cleaning + Power BI Dashboard
+# Retail Sales Analytics: Python Data Cleaning + Tableau Dashboard
 
 End-to-end analysis of **1,067,371 real e-commerce transactions** from a UK online
 gift retailer (Dec 2009 to Dec 2011, 43 countries). Raw data is cleaned in Python
-(Pandas), modelled as a star schema, and analysed in an interactive Power BI
-dashboard to answer business questions about revenue, customers, products and returns.
+(Pandas), modelled as a star schema, and analysed in an interactive Tableau dashboard
+to answer business questions about revenue, customers, markets and returns.
+
+**Live dashboard:** [Retail Sales Analytics on Tableau Public](https://public.tableau.com/app/profile/mayank.thakur8557/viz/RetailSalesAnalytics_17898484582950/Sheet1)
 
 **Dataset:** [UCI Online Retail II](https://archive.ics.uci.edu/dataset/502/online+retail+ii)
 (Chen, 2019), CC BY 4.0.
 
-**Status:** data cleaning, star schema, DAX measures and insights are complete.
-The Power BI dashboard is being built; screenshots will be added here.
+![Dashboard overview](screenshots/dashboard_overview.png)
 
 ## Business questions
 
 1. How is revenue trending, and how seasonal is the business?
-2. Which markets and products drive revenue?
+2. Which markets drive revenue?
 3. Who are the most valuable customers, and who is at risk of churning?
 4. How much revenue is lost to returns?
 
@@ -22,10 +23,11 @@ The Power BI dashboard is being built; screenshots will be added here.
 
 ```
 Raw Excel (1.07M rows)
-  -> scripts/clean_data.py      Pandas: 6 cleaning steps, each logged with row counts
-  -> data/clean/*.csv           Star schema: 2 fact tables + 3 dimension tables
-  -> scripts/validate_metrics.py Answer key for every dashboard number
-  -> Power BI                   Data model, DAX measures, 3-page interactive dashboard
+  -> scripts/clean_data.py        Pandas: 6 cleaning steps, each logged with row counts
+  -> data/clean/*.csv             Star schema: 2 fact tables + 3 dimension tables
+  -> scripts/validate_metrics.py  Answer key for every dashboard number
+  -> scripts/build_tableau_file.py  One flat file for Tableau (sales + returns + segments)
+  -> Tableau Public               Calculated fields, 4 sheets, interactive dashboard
 ```
 
 ## Data cleaning
@@ -56,6 +58,23 @@ Result: **1,003,168 clean sales lines** and **17,914 return lines**.
 Customers are segmented with **RFM analysis** (Recency, Frequency, Monetary quartiles)
 into Champions, Loyal, Recent/Promising, At Risk and Hibernating.
 
+## Dashboard
+
+Built in Tableau Public with 6 calculated fields (Total Revenue, Orders, Avg Order Value,
+Return Value, Return Rate, Registered Customers). Every number was checked against the
+Python answer key in [`reports/key_metrics.md`](reports/key_metrics.md).
+
+- **KPIs:** revenue, orders, average order value, registered customers, return rate
+- **Monthly Trend:** revenue by month, Dec 2009 to Dec 2011
+- **Top Countries:** top 10 markets by revenue
+- **Customer Segments:** revenue by RFM segment
+- **Interactive:** click any country or segment to filter the whole dashboard
+
+Clicking **Ireland** shows its £623K revenue comes from just 3 registered customers
+with a £1,073 average order: large wholesale accounts, very different from the UK.
+
+![Dashboard filtered to Ireland](screenshots/dashboard_filtered_ireland.png)
+
 ## Key insights
 
 | Metric | Value |
@@ -81,31 +100,29 @@ into Champions, Loyal, Recent/Promising, At Risk and Hibernating.
 8. **Guest checkouts:** 13% of revenue has no customer ID, so it cannot be used for
    retention marketing. Encouraging account sign-up would close this gap.
 
-Answer key with all numbers: [`reports/key_metrics.md`](reports/key_metrics.md)
-
 ## Tech stack
 
-Python (Pandas), Power BI (Power Query, data modelling, DAX), Excel
+Python (Pandas), Tableau (calculated fields, dashboard actions), Excel, Git
 
 ## Run it
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install pandas openpyxl
 # download online_retail_II.xlsx from the UCI link above into data/raw/, then:
-.venv/bin/python scripts/convert_raw.py      # xlsx -> csv
-.venv/bin/python scripts/clean_data.py       # clean + build star schema
-.venv/bin/python scripts/validate_metrics.py # answer key
+.venv/bin/python scripts/convert_raw.py         # xlsx -> csv
+.venv/bin/python scripts/clean_data.py          # clean + build star schema
+.venv/bin/python scripts/validate_metrics.py    # answer key
+.venv/bin/python scripts/build_tableau_file.py  # flat file for Tableau
+.venv/bin/python scripts/slim_tableau_file.py   # smaller upload (only used columns)
 ```
-
-Then follow [`powerbi/BUILD_GUIDE.md`](powerbi/BUILD_GUIDE.md).
 
 ## Repo structure
 
 ```
 retail-sales-analytics/
-├── scripts/        # convert_raw.py, clean_data.py, validate_metrics.py
-├── data/clean/     # star schema CSVs (generated)
-├── powerbi/        # measures.dax, BUILD_GUIDE.md, .pbix
+├── scripts/        # cleaning, validation and Tableau export scripts
+├── data/clean/     # star schema CSVs (fact_sales is regenerated, not committed)
 ├── reports/        # cleaning_report.md, key_metrics.md
-└── screenshots/    # dashboard pages
+├── screenshots/    # Tableau dashboard
+└── powerbi/        # optional: DAX measures and guide for rebuilding in Power BI
 ```
