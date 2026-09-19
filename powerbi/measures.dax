@@ -1,0 +1,71 @@
+// DAX measures for the Retail Sales Analytics dashboard
+// Create each one in Power BI: Home > New measure, paste, press Enter.
+// Put them all in the fact_sales table (or a "_Measures" table).
+// Expected values (all data, no filters) are from reports/key_metrics.md.
+
+// ---------------------------------------------------------------- core KPIs
+Total Revenue = SUM ( fact_sales[Revenue] )
+// expected: 19,327,626.52
+
+Total Orders = DISTINCTCOUNT ( fact_sales[Invoice] )
+// expected: 39,510
+
+Units Sold = SUM ( fact_sales[Quantity] )
+// expected: 10,912,833
+
+Avg Order Value = DIVIDE ( [Total Revenue], [Total Orders] )
+// expected: 489.18
+
+Registered Customers =
+CALCULATE ( DISTINCTCOUNT ( fact_sales[CustomerID] ), fact_sales[CustomerID] <> 0 )
+// expected: 5,852
+
+// ---------------------------------------------------------------- returns
+Return Value = SUM ( fact_returns[ReturnValue] )
+// expected: 716,425.97
+
+Return Rate % = DIVIDE ( [Return Value], [Total Revenue] )
+// expected: 3.71%  (format as percentage)
+
+// ---------------------------------------------------------------- time intelligence
+// Needs: dim_date marked as date table (Table tools > Mark as date table > Date)
+Revenue PY = CALCULATE ( [Total Revenue], SAMEPERIODLASTYEAR ( dim_date[Date] ) )
+
+YoY Growth % = DIVIDE ( [Total Revenue] - [Revenue PY], [Revenue PY] )
+// Check: filter Year = 2011 and Month Jan-Nov  ->  about 2.1%
+// (Dec 2011 has only 9 days of data, so compare Jan-Nov like-for-like)
+
+Revenue YTD = TOTALYTD ( [Total Revenue], dim_date[Date] )
+
+// ---------------------------------------------------------------- mix and share
+UK Revenue Share % =
+DIVIDE (
+    CALCULATE ( [Total Revenue], fact_sales[Country] = "United Kingdom" ),
+    CALCULATE ( [Total Revenue], REMOVEFILTERS ( fact_sales[Country] ) )
+)
+// expected: 85.4%
+
+Guest Revenue Share % =
+DIVIDE (
+    CALCULATE ( [Total Revenue], fact_sales[CustomerType] = "Guest" ),
+    CALCULATE ( [Total Revenue], REMOVEFILTERS ( fact_sales[CustomerType] ) )
+)
+// expected: 13.3%
+
+Revenue Share % =
+DIVIDE ( [Total Revenue], CALCULATE ( [Total Revenue], ALLSELECTED () ) )
+// use in tables and donuts to show each row's share of the total
+
+// ---------------------------------------------------------------- customers
+Repeat Customer % =
+VAR Cust =
+    FILTER ( dim_customer, dim_customer[CustomerID] <> 0 )
+RETURN
+    DIVIDE ( COUNTROWS ( FILTER ( Cust, dim_customer[Orders] > 1 ) ), COUNTROWS ( Cust ) )
+// expected: 72.3%
+
+Revenue per Customer =
+DIVIDE (
+    CALCULATE ( [Total Revenue], fact_sales[CustomerID] <> 0 ),
+    [Registered Customers]
+)

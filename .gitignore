@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+.DS_Store
+
+# Raw and generated data are large; regenerate with the scripts
+data/raw/
+data/clean/fact_sales.csv
+
+# Upload workbook for Power BI; regenerate with scripts/build_workbook.py
+powerbi/retail_sales_model.xlsx
